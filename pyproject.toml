@@ -3,7 +3,7 @@ requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
-name = "scikit_build_core_conan"
+name = "scikit-build-core-conan"
 version = "0.1.0"
 authors = [
     { name = "Zhengyu Wu", email = "zhengyu.wu21@imperial.ac.uk" },
