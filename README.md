@@ -2,6 +2,9 @@
 
 A conan plugin for scikit-build-core
 
+> [!NOTE]
+> This project is under early development. Should you encounter any problems, please feel free to open an issue.
+
 ## Example
 
 To use `scikit-build-core-conan`, add it to your `build-system.requires`, and specify the `scikit_build_core_conan.build` 
