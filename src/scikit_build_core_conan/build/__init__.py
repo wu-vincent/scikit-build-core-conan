@@ -43,6 +43,13 @@ from scikit_build_core.settings.sources import SourceChain, TOMLSource
 
 
 @dataclasses.dataclass
+class ConanLocalRecipesSettings:
+    path: str = "."
+    name: Optional[str] = None
+    version: Optional[str] = None
+
+
+@dataclasses.dataclass
 class ConanSettings:
     path: str = "."
     build: str = "missing"
@@ -52,6 +59,33 @@ class ConanSettings:
     config: List[str] = dataclasses.field(default_factory=list)
     generator: Optional[str] = None
     output_folder: Optional[str] = None
+    local_recipes: List[ConanLocalRecipesSettings] = dataclasses.field(default_factory=list)
+
+
+def detect_profile():
+    f = io.StringIO()
+    conan_api = ConanAPI()
+    conan_cli = ConanCli(conan_api)
+    with redirect_stdout(f):
+        conan_cli.run(["profile", "list", "--format=json"])
+    profiles: list[str] = json.loads(f.getvalue())
+    if "default" not in profiles:
+        conan_cli.run(["profile", "detect"])
+
+
+def conan_export_local_recipes(settings: ConanLocalRecipesSettings) -> None:
+    path = os.path.abspath(settings.path)
+    cmd = ["export", f"{path}"]
+
+    if settings.name:
+        cmd += ["--name", settings.name]
+
+    if settings.version:
+        cmd += ["--version", settings.version]
+
+    conan_api = ConanAPI()
+    conan_cli = ConanCli(conan_api)
+    conan_cli.run(cmd)
 
 
 def conan_install(settings: ConanSettings, build_type: str) -> dict:
@@ -101,11 +135,11 @@ def conan_install(settings: ConanSettings, build_type: str) -> dict:
 
 
 def _build_wheel_impl(
-        wheel_directory: str,
-        config_settings: dict[str, list[str] | str] | None = None,
-        metadata_directory: str | None = None,
-        *,
-        editable: bool,
+    wheel_directory: str,
+    config_settings: dict[str, list[str] | str] | None = None,
+    metadata_directory: str | None = None,
+    *,
+    editable: bool,
 ) -> str:
     # Load settings for scikit-build
     skbuild_settings = SettingsReader.from_file("pyproject.toml").settings
@@ -117,13 +151,22 @@ def _build_wheel_impl(
         pyproject = tomllib.load(f)
         pyproject = copy.deepcopy(pyproject)
 
-    process_overides(pyproject.get("tool", {}).get("scikit-build-core-conan", {}), "editable" if editable else "wheel",
-                     None)
+    process_overides(
+        pyproject.get("tool", {}).get("scikit-build-core-conan", {}), "editable" if editable else "wheel", None
+    )
     # noinspection PyTypeChecker
     conan_settings = SourceChain(
         TOMLSource(*prefixes, settings=pyproject),
         prefixes=prefixes,
     ).convert_target(ConanSettings)
+
+    # Detect conan profile if one is not specified
+    if not conan_settings.profile:
+        detect_profile()
+
+    # Export local dependencies
+    for recipe in conan_settings.local_recipes:
+        conan_export_local_recipes(recipe)
 
     # Use a tmp folder for the toolchain file
     with tempfile.TemporaryDirectory() as tmp:
@@ -156,16 +199,16 @@ def _build_wheel_impl(
 
 
 def build_wheel(
-        wheel_directory: str,
-        config_settings: dict[str, list[str] | str] | None = None,
-        metadata_directory: str | None = None,
+    wheel_directory: str,
+    config_settings: dict[str, list[str] | str] | None = None,
+    metadata_directory: str | None = None,
 ) -> str:
     return _build_wheel_impl(wheel_directory, config_settings, metadata_directory, editable=False)
 
 
 def build_editable(
-        wheel_directory: str,
-        config_settings: dict[str, list[str] | str] | None = None,
-        metadata_directory: str | None = None,
+    wheel_directory: str,
+    config_settings: dict[str, list[str] | str] | None = None,
+    metadata_directory: str | None = None,
 ) -> str:
     return _build_wheel_impl(wheel_directory, config_settings, metadata_directory, editable=True)

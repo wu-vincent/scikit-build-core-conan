@@ -40,12 +40,22 @@ in `pip`. Below are the supported configuration options:
 [tool.scikit-build-core-conan]
 path = "."
 build = "missing"
-profile = "/path/to/profile"
+profile = "default"
 options = []
 settings = []
 config = []
 generator = "Ninja"
 output_folder = "build"
+```
+
+### Local recipes
+
+Sometimes you may want to consume a local recipe rather than from the conan centre index. You can do this like this:
+```toml
+[[tool.scikit-build-core-conan.local-recipes]]
+path = "path/to/recipe"
+name = "recipe"   # optional: package name if not specified in conanfile
+version = "0.0.1" # optional: package version if not specified in conanfile
 ```
 
 ### Overrides
