@@ -21,7 +21,7 @@ from scikit_build_core.build import (
     prepare_metadata_for_build_editable,
     prepare_metadata_for_build_wheel,
 )
-from scikit_build_core.settings.skbuild_read_settings import SettingsReader
+from scikit_build_core.settings.skbuild_read_settings import SettingsReader, process_overides
 
 __all__ = [
     "build_editable",
@@ -68,7 +68,7 @@ def conan_install(settings: ConanSettings, build_type: str) -> dict:
             "--format=json",
         ]
         if settings.profile:
-            cmd += ["-pr", settings.output_folder]
+            cmd += ["-pr", os.path.abspath(settings.profile)]
 
         for o in settings.options:
             cmd += ["-o", o]
@@ -83,7 +83,7 @@ def conan_install(settings: ConanSettings, build_type: str) -> dict:
             cmd += ["-g", settings.generator]
 
         if settings.output_folder:
-            cmd += [f"--output-folder={settings.output_folder}"]
+            cmd += [f"--output-folder={os.path.abspath(settings.output_folder)}"]
 
         f = io.StringIO()
         conan_api = ConanAPI()
@@ -96,27 +96,29 @@ def conan_install(settings: ConanSettings, build_type: str) -> dict:
 
 
 def _build_wheel_impl(
-    wheel_directory: str,
-    config_settings: dict[str, list[str] | str] | None = None,
-    metadata_directory: str | None = None,
-    *,
-    editable: bool,
+        wheel_directory: str,
+        config_settings: dict[str, list[str] | str] | None = None,
+        metadata_directory: str | None = None,
+        *,
+        editable: bool,
 ) -> str:
+    # Load settings for scikit-build
+    skbuild_settings = SettingsReader.from_file("pyproject.toml").settings
+    build_type = skbuild_settings.cmake.build_type
+
     # Load settings for scikit-build-core-conan
     prefixes = ["tool", "scikit-build-core-conan"]
     with Path("pyproject.toml").open("rb") as f:
         pyproject = tomllib.load(f)
         pyproject = copy.deepcopy(pyproject)
 
+    process_overides(pyproject.get("tool", {}).get("scikit-build-core-conan", {}), "editable" if editable else "wheel",
+                     None)
     # noinspection PyTypeChecker
     conan_settings = SourceChain(
         TOMLSource(*prefixes, settings=pyproject),
         prefixes=prefixes,
     ).convert_target(ConanSettings)
-
-    # Load settings for scikit-build
-    skbuild_settings = SettingsReader.from_file("pyproject.toml").settings
-    build_type = skbuild_settings.cmake.build_type
 
     # Use a tmp folder for the toolchain file
     with tempfile.TemporaryDirectory() as tmp:
@@ -149,16 +151,16 @@ def _build_wheel_impl(
 
 
 def build_wheel(
-    wheel_directory: str,
-    config_settings: dict[str, list[str] | str] | None = None,
-    metadata_directory: str | None = None,
+        wheel_directory: str,
+        config_settings: dict[str, list[str] | str] | None = None,
+        metadata_directory: str | None = None,
 ) -> str:
     return _build_wheel_impl(wheel_directory, config_settings, metadata_directory, editable=False)
 
 
 def build_editable(
-    wheel_directory: str,
-    config_settings: dict[str, list[str] | str] | None = None,
-    metadata_directory: str | None = None,
+        wheel_directory: str,
+        config_settings: dict[str, list[str] | str] | None = None,
+        metadata_directory: str | None = None,
 ) -> str:
     return _build_wheel_impl(wheel_directory, config_settings, metadata_directory, editable=True)
