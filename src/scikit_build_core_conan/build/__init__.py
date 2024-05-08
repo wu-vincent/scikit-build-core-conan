@@ -4,11 +4,16 @@ import io
 import json
 import os
 import shutil
+import sys
 import tempfile
-import tomllib
 from contextlib import redirect_stdout
 from pathlib import Path
 from typing import List, Optional
+
+if sys.version_info < (3, 11):
+    import tomli as tomllib
+else:
+    import tomllib
 
 import scikit_build_core.build
 from conan.api.conan_api import ConanAPI
