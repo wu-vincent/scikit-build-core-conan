@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from scikit_build_core.build import (
     build_sdist,
     get_requires_for_build_editable,
