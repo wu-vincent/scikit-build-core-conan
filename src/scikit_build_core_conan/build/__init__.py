@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import dataclasses
 import io
@@ -27,6 +29,7 @@ from scikit_build_core.build import (
     prepare_metadata_for_build_wheel,
 )
 from scikit_build_core.settings.skbuild_read_settings import SettingsReader, process_overides
+from scikit_build_core.settings.sources import SourceChain, TOMLSource
 
 __all__ = [
     "build_editable",
@@ -38,8 +41,6 @@ __all__ = [
     "prepare_metadata_for_build_editable",
     "prepare_metadata_for_build_wheel",
 ]
-
-from scikit_build_core.settings.sources import SourceChain, TOMLSource
 
 
 @dataclasses.dataclass
@@ -160,9 +161,8 @@ def _build_wheel_impl(
         prefixes=prefixes,
     ).convert_target(ConanSettings)
 
-    # Detect conan profile if one is not specified
-    if not conan_settings.profile:
-        detect_profile()
+    # Detect conan profile
+    detect_profile()
 
     # Export local dependencies
     for recipe in conan_settings.local_recipes:
