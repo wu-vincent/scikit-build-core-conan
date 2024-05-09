@@ -70,3 +70,7 @@ For example:
 if.platform-system = "linux"
 profile = "/path/to/profile"
 ```
+
+## Projects using this build backend:
+
+- **[endstone](https://github.com/EndstoneMC/endstone)**: A high-level plugin api for Minecraft: Bedrock Edition Dedicated Servers.
