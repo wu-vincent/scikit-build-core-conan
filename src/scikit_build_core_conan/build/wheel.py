@@ -115,7 +115,10 @@ def _build_wheel_impl(
         pyproject = copy.deepcopy(pyproject)
 
     process_overides(
-        pyproject.get("tool", {}).get("scikit-build-core-conan", {}), "editable" if editable else "wheel", None
+        pyproject.get("tool", {}).get("scikit-build-core-conan", {}),
+        state="editable" if editable else "wheel",
+        retry=False,
+        env=None,
     )
     # noinspection PyTypeChecker
     conan_settings = SourceChain(
