@@ -17,7 +17,9 @@ else:
 
 from conan.api.conan_api import ConanAPI
 from conan.cli.cli import Cli as ConanCli
+from conan.tools.env.environment import environment_wrap_command
 import scikit_build_core.build
+from conans.util.runners import conan_run
 from scikit_build_core_conan.build.settings import ConanSettings, ConanLocalRecipesSettings
 from scikit_build_core.settings.skbuild_read_settings import SettingsReader, process_overides
 from scikit_build_core.settings.sources import SourceChain, TOMLSource
@@ -97,12 +99,26 @@ def _conan_detect_profile():
         conan_cli.run(["profile", "detect"])
 
 
+def _conan_activate_env(env_folder, env="conanbuild"):
+    stdout = io.StringIO()
+    cmd = environment_wrap_command(env, env_folder,
+                                   cmd='python -c "import json,os;print(json.dumps(dict(os.environ)))"')
+    conan_run(cmd, stdout)
+    for line in stdout.getvalue().splitlines():
+        if line.startswith('{') and line.endswith('}'):
+            env_vars = json.loads(line)
+            os.environ.update(env_vars)
+            return
+
+    raise ValueError(f"Unable to activate environment {env}")
+
+
 def _build_wheel_impl(
-    wheel_directory: str,
-    config_settings: dict[str, list[str] | str] | None = None,
-    metadata_directory: str | None = None,
-    *,
-    editable: bool,
+        wheel_directory: str,
+        config_settings: dict[str, list[str] | str] | None = None,
+        metadata_directory: str | None = None,
+        *,
+        editable: bool,
 ) -> str:
     # Load settings for scikit-build
     skbuild_settings = SettingsReader.from_file("pyproject.toml").settings
@@ -144,6 +160,9 @@ def _build_wheel_impl(
         # Get the path to the toolchain file from install outputs
         generator_folder = result["generators_folder"]
         toolchain_file = os.path.abspath(f"{generator_folder}/conan_toolchain.cmake")
+
+        # Activate build env
+        _conan_activate_env(generator_folder)
 
         # Extend the cmake.args
         config_settings = {} if config_settings is None else config_settings
