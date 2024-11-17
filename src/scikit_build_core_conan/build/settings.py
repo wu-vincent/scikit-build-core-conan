@@ -19,4 +19,6 @@ class ConanSettings:
     config: List[str] = dataclasses.field(default_factory=list)
     generator: str = ""
     output_folder: str = ""
-    local_recipes: List[ConanLocalRecipesSettings] = dataclasses.field(default_factory=list)
+    local_recipes: List[ConanLocalRecipesSettings] = dataclasses.field(
+        default_factory=list
+    )

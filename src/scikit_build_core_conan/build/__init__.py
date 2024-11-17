@@ -28,7 +28,9 @@ def build_wheel(
     config_settings: dict[str, list[str] | str] | None = None,
     metadata_directory: str | None = None,
 ) -> str:
-    return _build_wheel_impl(wheel_directory, config_settings, metadata_directory, editable=False)
+    return _build_wheel_impl(
+        wheel_directory, config_settings, metadata_directory, editable=False
+    )
 
 
 def build_editable(
@@ -36,4 +38,6 @@ def build_editable(
     config_settings: dict[str, list[str] | str] | None = None,
     metadata_directory: str | None = None,
 ) -> str:
-    return _build_wheel_impl(wheel_directory, config_settings, metadata_directory, editable=True)
+    return _build_wheel_impl(
+        wheel_directory, config_settings, metadata_directory, editable=True
+    )

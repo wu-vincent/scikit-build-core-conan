@@ -15,13 +15,20 @@ if sys.version_info < (3, 11):
 else:
     import tomllib
 
+from conan.api.output import ConanOutput
 from conan.api.conan_api import ConanAPI
 from conan.cli.cli import Cli as ConanCli
 from conan.tools.env.environment import environment_wrap_command
 import scikit_build_core.build
 from conans.util.runners import conan_run
-from scikit_build_core_conan.build.settings import ConanSettings, ConanLocalRecipesSettings
-from scikit_build_core.settings.skbuild_read_settings import SettingsReader, process_overides
+from scikit_build_core_conan.build.settings import (
+    ConanSettings,
+    ConanLocalRecipesSettings,
+)
+from scikit_build_core.settings.skbuild_read_settings import (
+    SettingsReader,
+    process_overides,
+)
 from scikit_build_core.settings.sources import SourceChain, TOMLSource
 
 __all__ = ["_build_wheel_impl"]
@@ -101,24 +108,29 @@ def _conan_detect_profile():
 
 def _conan_activate_env(env_folder, env="conanbuild"):
     stdout = io.StringIO()
-    cmd = environment_wrap_command(env, env_folder,
-                                   cmd='python -c "import json,os;print(json.dumps(dict(os.environ)))"')
+    cmd = environment_wrap_command(
+        env,
+        env_folder,
+        cmd=f'"{sys.executable}" -c "import json,os;print(json.dumps(dict(os.environ)))"',
+    )
     conan_run(cmd, stdout)
     for line in stdout.getvalue().splitlines():
-        if line.startswith('{') and line.endswith('}'):
+        if line.startswith("{") and line.endswith("}"):
             env_vars = json.loads(line)
             os.environ.update(env_vars)
             return
+        else:
+            ConanOutput().info(line)
 
     raise ValueError(f"Unable to activate environment {env}")
 
 
 def _build_wheel_impl(
-        wheel_directory: str,
-        config_settings: dict[str, list[str] | str] | None = None,
-        metadata_directory: str | None = None,
-        *,
-        editable: bool,
+    wheel_directory: str,
+    config_settings: dict[str, list[str] | str] | None = None,
+    metadata_directory: str | None = None,
+    *,
+    editable: bool,
 ) -> str:
     # Load settings for scikit-build
     skbuild_settings = SettingsReader.from_file("pyproject.toml").settings
@@ -169,7 +181,7 @@ def _build_wheel_impl(
         config_settings["cmake.args"] = ";".join(
             skbuild_settings.cmake.args
             + [
-                f"-DCMAKE_POLICY_DEFAULT_CMP0091=NEW",
+                "-DCMAKE_POLICY_DEFAULT_CMP0091=NEW",
                 f"-DCMAKE_TOOLCHAIN_FILE={toolchain_file}",
                 f"-DCMAKE_BUILD_TYPE={build_type}",
             ]
@@ -177,6 +189,10 @@ def _build_wheel_impl(
 
         # Profit
         if not editable:
-            return scikit_build_core.build.build_wheel(wheel_directory, config_settings, metadata_directory)
+            return scikit_build_core.build.build_wheel(
+                wheel_directory, config_settings, metadata_directory
+            )
         else:
-            return scikit_build_core.build.build_editable(wheel_directory, config_settings, metadata_directory)
+            return scikit_build_core.build.build_editable(
+                wheel_directory, config_settings, metadata_directory
+            )
