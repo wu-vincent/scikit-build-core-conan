@@ -7,7 +7,7 @@ import os
 import shutil
 import sys
 import tempfile
-from contextlib import redirect_stdout
+from contextlib import redirect_stdout, redirect_stderr
 from pathlib import Path
 
 if sys.version_info < (3, 11):
@@ -96,11 +96,14 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
 
 
 def _conan_detect_profile():
-    f = io.StringIO()
+    stdout = io.StringIO()
+    stderr = io.StringIO()
     conan_api = ConanAPI()
     conan_cli = ConanCli(conan_api)
-    with redirect_stdout(f):
-        conan_cli.run(["profile", "list", "--format=json"])
+    with redirect_stdout(stdout):
+        with redirect_stderr(stderr):
+            conan_cli.run(["profile", "list", "--format=json"])
+    f = stdout if stdout.getvalue() else stderr
     profiles: list[str] = json.loads(f.getvalue())
     if "default" not in profiles:
         conan_cli.run(["profile", "detect"])
