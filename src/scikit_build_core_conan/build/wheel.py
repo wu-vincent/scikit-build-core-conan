@@ -7,7 +7,6 @@ import os
 import shutil
 import sys
 import tempfile
-from contextlib import redirect_stdout
 from pathlib import Path
 
 if sys.version_info < (3, 11):
@@ -59,51 +58,32 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
                 shutil.copy(path / file, tmp)
                 break
 
-        cmd = [
-            "install",
-            f"{tmp}",
-            f"--build={settings.build}",
-            "-s",
-            f"build_type={build_type}",
-            "--format=json",
-        ]
-        if settings.profile:
-            cmd += ["-pr", os.path.abspath(settings.profile)]
-
-        for o in settings.options:
-            cmd += ["-o", o]
-
-        for s in settings.settings:
-            cmd += ["-s", s]
-
-        for c in settings.config:
-            cmd += ["-c", c]
-
-        if settings.generator:
-            cmd += ["-g", settings.generator]
-
-        if settings.output_folder:
-            cmd += [f"--output-folder={os.path.abspath(settings.output_folder)}"]
-
-        f = io.StringIO()
+        # mostly reimplement conan.cli.commands.install
         conan_api = ConanAPI()
-        conan_cli = ConanCli(conan_api)
-        with redirect_stdout(f):
-            conan_cli.run(cmd)
-        out = f.getvalue()
-        data = json.loads(out)
-        return data["graph"]["nodes"]["0"]
+        conanfile_path = conan_api.local.get_conanfile_path(tmp, os.getcwd, py=None)
+        output_folder = os.path.normpath(os.path.join(os.getcwd(), settings.output_folder)) if settings.output_folder else None
+
+        remotes = conan_api.remotes.list()
+        lockfile = conan_api.lockfile.get_lockfile(conanfile_path=tmp)
+        profiles = [os.path.abspath(settings.profile) if settings.profile else "default"]
+
+        profile_build = conan_api.profiles.get_profile(profiles, [f"build_type={build_type}", *settings.settings], settings.options, settings.config)
+        profile_host = conan_api.profiles.get_profile(profiles, [f"build_type={build_type}", *settings.settings], settings.options, settings.config)
+        deps_graph = conan_api.graph.load_graph_consumer(conanfile_path, "", "", "", "", profile_host, profile_build, lockfile, remotes, False, is_build_require=False)
+        conan_api.graph.analyze_binaries(deps_graph, [settings.build], remotes, lockfile=lockfile)
+        conan_api.install.install_binaries(deps_graph, remotes)
+        conan_api.install.install_consumer(deps_graph, settings.generator, tmp, output_folder)
+        lockfile = conan_api.lockfile.update_lockfile(lockfile, deps_graph, False, False)
+        conan_api.lockfile.save_lockfile(lockfile, None)
+
+        return deps_graph.root
 
 
 def _conan_detect_profile():
-    f = io.StringIO()
     conan_api = ConanAPI()
-    conan_cli = ConanCli(conan_api)
-    with redirect_stdout(f):
-        conan_cli.run(["profile", "list", "--format=json"])
-    profiles: list[str] = json.loads(f.getvalue())
+    profiles = conan_api.profiles.list()
     if "default" not in profiles:
-        conan_cli.run(["profile", "detect"])
+        conan_api.profiles.detect()
 
 
 def _conan_activate_env(env_folder, env="conanbuild"):
@@ -170,7 +150,7 @@ def _build_wheel_impl(
         result = _conan_install(conan_settings, build_type)
 
         # Get the path to the toolchain file from install outputs
-        generator_folder = result["generators_folder"]
+        generator_folder = result.conanfile.generators_folder
         toolchain_file = os.path.abspath(f"{generator_folder}/conan_toolchain.cmake")
 
         # Activate build env
