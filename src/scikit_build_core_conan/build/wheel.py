@@ -65,7 +65,7 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
 
         remotes = conan_api.remotes.list()
         lockfile = conan_api.lockfile.get_lockfile(conanfile_path=tmp)
-        profiles = os.path.abspath(settings.profile) if settings.profile else ["default"]
+        profiles = [os.path.abspath(settings.profile) if settings.profile else "default"]
 
         profile_build = conan_api.profiles.get_profile(profiles, [f"build_type={build_type}", *settings.settings], settings.options, settings.config)
         profile_host = conan_api.profiles.get_profile(profiles, [f"build_type={build_type}", *settings.settings], settings.options, settings.config)
