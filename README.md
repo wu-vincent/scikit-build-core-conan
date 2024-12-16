@@ -45,7 +45,7 @@ options = []
 settings = []
 config = []
 generator = "Ninja"
-output_folder = "build"
+output-folder = "build"
 ```
 
 ### Local recipes
