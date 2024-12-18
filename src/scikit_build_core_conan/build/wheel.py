@@ -60,20 +60,48 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
 
         # mostly reimplement conan.cli.commands.install
         conan_api = ConanAPI()
+        conan_api.install
         conanfile_path = conan_api.local.get_conanfile_path(tmp, os.getcwd, py=None)
-        output_folder = os.path.normpath(os.path.join(os.getcwd(), settings.output_folder)) if settings.output_folder else None
+        output_folder = (
+            os.path.normpath(os.path.join(os.getcwd(), settings.output_folder))
+            if settings.output_folder
+            else None
+        )
 
         remotes = conan_api.remotes.list()
         lockfile = conan_api.lockfile.get_lockfile(conanfile_path=tmp)
-        profiles = [os.path.abspath(settings.profile) if settings.profile else "default"]
+        profiles = [
+            os.path.abspath(settings.profile) if settings.profile else "default"
+        ]
 
-        profile_build = conan_api.profiles.get_profile(profiles, [f"build_type={build_type}", *settings.settings], settings.options, settings.config)
-        profile_host = conan_api.profiles.get_profile(profiles, [f"build_type={build_type}", *settings.settings], settings.options, settings.config)
-        deps_graph = conan_api.graph.load_graph_consumer(conanfile_path, "", "", "", "", profile_host, profile_build, lockfile, remotes, False, is_build_require=False)
-        conan_api.graph.analyze_binaries(deps_graph, [settings.build], remotes, lockfile=lockfile)
+        profile = conan_api.profiles.get_profile(
+            profiles,
+            [f"build_type={build_type}", *settings.settings],
+            settings.options,
+            settings.config,
+        )
+        deps_graph = conan_api.graph.load_graph_consumer(
+            conanfile_path,
+            name="",
+            version="",
+            user="",
+            channel="",
+            profile_host=profile,
+            profile_build=profile,
+            lockfile=lockfile,
+            remotes=remotes,
+            update=False
+        )
+        conan_api.graph.analyze_binaries(
+            deps_graph, [settings.build], remotes, lockfile=lockfile
+        )
         conan_api.install.install_binaries(deps_graph, remotes)
-        conan_api.install.install_consumer(deps_graph, settings.generator, tmp, output_folder)
-        lockfile = conan_api.lockfile.update_lockfile(lockfile, deps_graph, False, False)
+        conan_api.install.install_consumer(
+            deps_graph, settings.generator, tmp, output_folder
+        )
+        lockfile = conan_api.lockfile.update_lockfile(
+            lockfile, deps_graph, False, False
+        )
         conan_api.lockfile.save_lockfile(lockfile, None)
 
         return deps_graph.root
@@ -86,9 +114,10 @@ def _conan_detect_profile():
         conan_api.profiles.detect()
 
 
-def _conan_activate_env(env_folder, env="conanbuild"):
+def _conan_activate_env(conanfile, env_folder, env="conanbuild"):
     stdout = io.StringIO()
     cmd = environment_wrap_command(
+        conanfile,
         env,
         env_folder,
         cmd=f'"{sys.executable}" -c "import json,os;print(json.dumps(dict(os.environ)))"',
@@ -106,11 +135,11 @@ def _conan_activate_env(env_folder, env="conanbuild"):
 
 
 def _build_wheel_impl(
-    wheel_directory: str,
-    config_settings: dict[str, list[str] | str] | None = None,
-    metadata_directory: str | None = None,
-    *,
-    editable: bool,
+        wheel_directory: str,
+        config_settings: dict[str, list[str] | str] | None = None,
+        metadata_directory: str | None = None,
+        *,
+        editable: bool,
 ) -> str:
     # Load settings for scikit-build
     skbuild_settings = SettingsReader.from_file("pyproject.toml").settings
@@ -154,7 +183,7 @@ def _build_wheel_impl(
         toolchain_file = os.path.abspath(f"{generator_folder}/conan_toolchain.cmake")
 
         # Activate build env
-        _conan_activate_env(generator_folder)
+        _conan_activate_env(result.conanfile, generator_folder)
 
         # Extend the cmake.args
         config_settings = {} if config_settings is None else config_settings
