@@ -9,6 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+
 if sys.version_info < (3, 11):
     import tomli as tomllib
 else:
@@ -18,6 +19,7 @@ from conan.api.output import ConanOutput
 from conan.api.conan_api import ConanAPI
 from conan.cli.cli import Cli as ConanCli
 from conan.tools.env.environment import environment_wrap_command
+from conans.util.files import save
 import scikit_build_core.build
 from conans.util.runners import conan_run
 from scikit_build_core_conan.build.settings import (
@@ -90,7 +92,7 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
             profile_build=profile,
             lockfile=lockfile,
             remotes=remotes,
-            update=False
+            update=False,
         )
         conan_api.graph.analyze_binaries(
             deps_graph, [settings.build], remotes, lockfile=lockfile
@@ -111,7 +113,12 @@ def _conan_detect_profile():
     conan_api = ConanAPI()
     profiles = conan_api.profiles.list()
     if "default" not in profiles:
-        conan_api.profiles.detect()
+        profile_pathname = conan_api.profiles.get_path(
+            "default", os.getcwd(), exists=False
+        )
+        detected_profile = conan_api.profiles.detect()
+        contents = detected_profile.dumps()
+        save(profile_pathname, contents)
 
 
 def _conan_activate_env(conanfile, env_folder, env="conanbuild"):
@@ -135,11 +142,11 @@ def _conan_activate_env(conanfile, env_folder, env="conanbuild"):
 
 
 def _build_wheel_impl(
-        wheel_directory: str,
-        config_settings: dict[str, list[str] | str] | None = None,
-        metadata_directory: str | None = None,
-        *,
-        editable: bool,
+    wheel_directory: str,
+    config_settings: dict[str, list[str] | str] | None = None,
+    metadata_directory: str | None = None,
+    *,
+    editable: bool,
 ) -> str:
     # Load settings for scikit-build
     skbuild_settings = SettingsReader.from_file("pyproject.toml").settings
