@@ -18,6 +18,7 @@ else:
 from conan.api.output import ConanOutput
 from conan.api.conan_api import ConanAPI
 from conan.cli.cli import Cli as ConanCli
+from conan.cli.printers import print_profiles
 from conan.tools.env.environment import environment_wrap_command
 from conans.util.files import save
 import scikit_build_core.build
@@ -62,7 +63,6 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
 
         # mostly reimplement conan.cli.commands.install
         conan_api = ConanAPI()
-        conan_api.install
         conanfile_path = conan_api.local.get_conanfile_path(tmp, os.getcwd, py=None)
         output_folder = (
             os.path.normpath(os.path.join(os.getcwd(), settings.output_folder))
@@ -76,20 +76,25 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
             os.path.abspath(settings.profile) if settings.profile else "default"
         ]
 
-        profile = conan_api.profiles.get_profile(
+        profile_host = conan_api.profiles.get_profile(
             profiles,
             [f"build_type={build_type}", *settings.settings],
             settings.options,
             settings.config,
         )
+        profile_build = conan_api.profiles.get_profile(
+            profiles
+        )
+        print_profiles(profile_host=profile_host, profile_build=profile_build)
+
         deps_graph = conan_api.graph.load_graph_consumer(
             conanfile_path,
             name="",
             version="",
             user="",
             channel="",
-            profile_host=profile,
-            profile_build=profile,
+            profile_host=profile_host,
+            profile_build=profile_build,
             lockfile=lockfile,
             remotes=remotes,
             update=False,
