@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scikit-build-core-conan"
-version = "0.6.0"
+version = "0.7.0"
 authors = [
     { name = "Zhengyu Wu", email = "zhengyu.wu21@imperial.ac.uk" },
 ]
