@@ -1,37 +1,37 @@
 from __future__ import annotations
 
 import copy
-import io
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
+from conan.errors import ConanException
 
 if sys.version_info < (3, 11):
     import tomli as tomllib
 else:
     import tomllib
 
-from conan.api.output import ConanOutput
+import scikit_build_core.build
 from conan.api.conan_api import ConanAPI
+from conan.api.output import ConanOutput
 from conan.cli.cli import Cli as ConanCli
 from conan.cli.printers import print_profiles
 from conan.tools.env.environment import environment_wrap_command
-from conans.util.files import save
-import scikit_build_core.build
-from conans.util.runners import conan_run
-from scikit_build_core_conan.build.settings import (
-    ConanSettings,
-    ConanLocalRecipesSettings,
-)
 from scikit_build_core.settings.skbuild_read_settings import (
     SettingsReader,
     process_overides,
 )
 from scikit_build_core.settings.sources import SourceChain, TOMLSource
+
+from scikit_build_core_conan.build.settings import (
+    ConanLocalRecipesSettings,
+    ConanSettings,
+)
 
 __all__ = ["_build_wheel_impl"]
 
@@ -82,9 +82,7 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
             settings.options,
             settings.config,
         )
-        profile_build = conan_api.profiles.get_profile(
-            profiles
-        )
+        profile_build = conan_api.profiles.get_profile(profiles)
         print_profiles(profile_host=profile_host, profile_build=profile_build)
 
         deps_graph = conan_api.graph.load_graph_consumer(
@@ -122,26 +120,44 @@ def _conan_detect_profile():
             "default", os.getcwd(), exists=False
         )
         detected_profile = conan_api.profiles.detect()
+        dir_path = os.path.dirname(profile_pathname)
+        if dir_path:
+            os.makedirs(dir_path, exist_ok=True)
         contents = detected_profile.dumps()
-        save(profile_pathname, contents)
+        with open(profile_pathname, "w", encoding="utf-8", newline="") as f:
+            f.write(contents)
 
 
 def _conan_activate_env(conanfile, env_folder, env="conanbuild"):
-    stdout = io.StringIO()
-    cmd = environment_wrap_command(
+    command = environment_wrap_command(
         conanfile,
         env,
         env_folder,
         cmd=f'"{sys.executable}" -c "import json,os;print(json.dumps(dict(os.environ)))"',
     )
-    conan_run(cmd, stdout)
-    for line in stdout.getvalue().splitlines():
-        if line.startswith("{") and line.endswith("}"):
-            env_vars = json.loads(line)
-            os.environ.update(env_vars)
-            return
-        else:
-            ConanOutput().info(line)
+    try:
+        proc = subprocess.Popen(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=None,
+        )
+    except Exception as e:
+        raise ConanException(f"Error while running cmd\nError: {str(e)}")
+
+    proc_stdout, proc_stderr = proc.communicate()
+    if proc_stdout:
+        for line in proc_stdout.decode("utf-8", errors="ignore").splitlines():
+            if line.startswith("{") and line.endswith("}"):
+                env_vars = json.loads(line)
+                os.environ.update(env_vars)
+                return
+            else:
+                ConanOutput().info(line)
+
+    if proc_stderr:
+        ConanOutput().error(proc_stderr.decode("utf-8", errors="ignore"))
 
     raise ValueError(f"Unable to activate environment {env}")
 
