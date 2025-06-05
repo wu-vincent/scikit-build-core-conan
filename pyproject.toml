@@ -38,6 +38,20 @@ dependencies = [
     "tomli; python_version < '3.11'",
 ]
 
+[project.optional-dependencies]
+pyproject = [
+]
+test = [
+    "build >=0.8",
+    "cattrs >=22.2.0",
+    "pytest >=7.2",
+    "pytest-subprocess >=1.5",
+    'pytest-xdist >=3.1',
+    'setuptools',
+    "virtualenv >=20.20",
+    "wheel >=0.40",
+]
+
 [project.urls]
 Homepage = "https://github.com/wu-vincent/scikit-build-core-conan"
 Issues = "https://github.com/wu-vincent/scikit-build-core-conan/issues"
