@@ -22,16 +22,21 @@ from conan.api.output import ConanOutput
 from conan.cli.cli import Cli as ConanCli
 from conan.cli.printers import print_profiles
 from conan.tools.env.environment import environment_wrap_command
-from scikit_build_core.settings.skbuild_read_settings import (
-    SettingsReader,
-    process_overides,
-)
+from scikit_build_core.settings.skbuild_read_settings import SettingsReader
 from scikit_build_core.settings.sources import SourceChain, TOMLSource
 
 from scikit_build_core_conan.build.settings import (
     ConanLocalRecipesSettings,
     ConanSettings,
 )
+
+try:
+    from scikit_build_core.settings.skbuild_read_settings import process_overrides
+except ImportError:
+    # Fallback to the old version where the function was `process_overides`
+    from scikit_build_core.settings.skbuild_read_settings import (
+        process_overides as process_overrides,
+    )
 
 __all__ = ["_build_wheel_impl"]
 
@@ -179,7 +184,7 @@ def _build_wheel_impl(
         pyproject = tomllib.load(f)
         pyproject = copy.deepcopy(pyproject)
 
-    process_overides(
+    process_overrides(
         pyproject.get("tool", {}).get("scikit-build-core-conan", {}),
         state="editable" if editable else "wheel",
         retry=False,
