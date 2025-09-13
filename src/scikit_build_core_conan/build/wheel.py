@@ -87,7 +87,12 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
             settings.options,
             settings.config,
         )
-        profile_build = conan_api.profiles.get_profile(profiles)
+        profile_build = conan_api.profiles.get_profile(
+            profiles,
+            [f"build_type={build_type}", *settings.settings],
+            settings.options,
+            settings.config,
+        )
         print_profiles(profile_host=profile_host, profile_build=profile_build)
 
         deps_graph = conan_api.graph.load_graph_consumer(
