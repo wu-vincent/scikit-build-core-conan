@@ -56,43 +56,64 @@ def _conan_export_local_recipes(settings: ConanLocalRecipesSettings) -> None:
     conan_cli.run(cmd)
 
 
+def _make_abs_path(path, cwd=None):
+    """convert 'path' to absolute if necessary (could be already absolute)
+    if not defined (empty, or None), will return 'default' one or 'cwd'
+    """
+    if path is None:
+        return None
+    if os.path.isabs(path):
+        return path
+    cwd = cwd or os.getcwd()
+    abs_path = os.path.normpath(os.path.join(cwd, path))
+    return abs_path
+
+
 def _conan_install(settings: ConanSettings, build_type: str) -> dict:
-    path = Path(settings.path).absolute()
+    # mostly reimplement conan.cli.commands.install
+    conan_api = ConanAPI()
+    cwd = os.getcwd()
+    path = conan_api.local.get_conanfile_path(settings.path, cwd, py=None)
 
     # Use a tmp folder for conanfile to avoid modifying the existing CMakeUserPresets.json
     with tempfile.TemporaryDirectory() as tmp:
-        for file in ["conanfile.txt", "conanfile.py"]:
-            if (path / file).exists():
-                shutil.copy(path / file, tmp)
-                break
+        # copy the conanfile to the temporary dir
+        shutil.copy(path, tmp)
 
-        # mostly reimplement conan.cli.commands.install
-        conan_api = ConanAPI()
-        conanfile_path = conan_api.local.get_conanfile_path(tmp, os.getcwd, py=None)
-        output_folder = (
-            os.path.normpath(os.path.join(os.getcwd(), settings.output_folder)) if settings.output_folder else None
-        )
+        # basic paths
+        path = conan_api.local.get_conanfile_path(tmp, cwd, py=None)
+        source_folder = os.path.dirname(path)
+        output_folder = _make_abs_path(settings.output_folder, cwd) if settings.output_folder else None
 
-        remotes = conan_api.remotes.list()
-        lockfile = conan_api.lockfile.get_lockfile(conanfile_path=tmp)
-        profiles = [os.path.abspath(settings.profile) if settings.profile else "default"]
-
-        profile_host = conan_api.profiles.get_profile(
-            profiles,
-            [f"build_type={build_type}", *settings.settings],
-            settings.options,
-            settings.config,
-        )
+        # Basic collaborators: remotes, lockfile, profiles
+        remotes = conan_api.remotes.list(settings.remote) if not settings.no_remote else []
+        lockfile = conan_api.lockfile.get_lockfile(lockfile=None, conanfile_path=path)
+        build_profiles = [settings.profile_all or settings.profile_build or conan_api.profiles.get_default_build()]
+        host_profiles = [settings.profile_all or settings.profile or conan_api.profiles.get_default_host()]
+        build_settings = [s for settings in (settings.settings_build, settings.settings_all) for s in settings]
+        host_settings = [s for settings in (settings.settings, settings.settings_all) for s in settings]
         profile_build = conan_api.profiles.get_profile(
-            profiles,
-            [f"build_type={build_type}", *settings.settings],
-            settings.options,
-            settings.config,
+            profiles=build_profiles,
+            settings=[f"build_type={build_type}", *build_settings],
+            options=[o for options in (settings.options_build, settings.settings_all) for o in options],
+            conf=[c for conf in (settings.config_build, settings.config_all) for c in conf],
+            cwd=cwd,
+            context="build",
+        )
+        profile_host = conan_api.profiles.get_profile(
+            profiles=host_profiles,
+            settings=[f"build_type={build_type}", *host_settings],
+            options=[o for options in (settings.options, settings.settings_all) for o in options],
+            conf=[c for conf in (settings.config, settings.config_all) for c in conf],
+            cwd=cwd,
+            context="host",
         )
         print_profiles(profile_host=profile_host, profile_build=profile_build)
 
-        deps_graph = conan_api.graph.load_graph_consumer(
-            conanfile_path,
+        # Graph computation (without installation of binaries)
+        gapi = conan_api.graph
+        deps_graph = gapi.load_graph_consumer(
+            path,
             name="",
             version="",
             user="",
@@ -103,9 +124,16 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
             remotes=remotes,
             update=False,
         )
-        conan_api.graph.analyze_binaries(deps_graph, [settings.build], remotes, lockfile=lockfile)
+        deps_graph.report_graph_error()
+        gapi.analyze_binaries(deps_graph, [settings.build], remotes, lockfile=lockfile)
+
+        # Installation of binaries and consumer generators
         conan_api.install.install_binaries(deps_graph, remotes)
-        conan_api.install.install_consumer(deps_graph, settings.generator, tmp, output_folder)
+        ConanOutput().title("Finalizing install (deploy, generators)")
+        conan_api.install.install_consumer(deps_graph, settings.generator, source_folder, output_folder)
+        ConanOutput().success("Install finished successfully")
+
+        # Update lockfile if necessary
         lockfile = conan_api.lockfile.update_lockfile(lockfile, deps_graph, False, False)
         conan_api.lockfile.save_lockfile(lockfile, None)
 
