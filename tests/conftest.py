@@ -87,20 +87,14 @@ class VEnv:
         self.wheelhouse = wheelhouse
         self.executable = Path(result.creator.exe)
         self.env_dir = env_dir.resolve()
-        self.platlib = Path(
-            self.execute("import sysconfig; print(sysconfig.get_path('platlib'))")
-        )
-        self.purelib = Path(
-            self.execute("import sysconfig; print(sysconfig.get_path('purelib'))")
-        )
+        self.platlib = Path(self.execute("import sysconfig; print(sysconfig.get_path('platlib'))"))
+        self.purelib = Path(self.execute("import sysconfig; print(sysconfig.get_path('purelib'))"))
 
     @overload
-    def run(self, *args: str, capture: Literal[True]) -> str:
-        ...
+    def run(self, *args: str, capture: Literal[True]) -> str: ...
 
     @overload
-    def run(self, *args: str, capture: Literal[False] = ...) -> None:
-        ...
+    def run(self, *args: str, capture: Literal[False] = ...) -> None: ...
 
     def run(self, *args: str, capture: bool = False) -> str | None:
         __tracebackhide__ = True
@@ -181,29 +175,21 @@ class PackageInfo:
 
     @property
     def sdist_dated_hash(self) -> str | None:
-        return (
-            self.sdist_dated_hash38
-            if sys.version_info < (3, 9)
-            else self.sdist_dated_hash39
-        )
+        return self.sdist_dated_hash38 if sys.version_info < (3, 9) else self.sdist_dated_hash39
 
     @property
     def source_date_epoch(self) -> str:
         return "12345"
 
 
-def process_package(
-        package: PackageInfo, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def process_package(package: PackageInfo, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     package_dir = tmp_path / "pkg"
     shutil.copytree(DIR / "packages" / package.name, package_dir)
     monkeypatch.chdir(package_dir)
 
 
 @pytest.fixture
-def package_simple_pyproject_ext(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> PackageInfo:
+def package_simple_pyproject_ext(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PackageInfo:
     package = PackageInfo(
         "simple_pyproject_ext",
         "71b4e95854ef8d04886758d24d18fe55ebe63648310acf58c7423387cca73508",
@@ -216,9 +202,7 @@ def package_simple_pyproject_ext(
 
 
 @pytest.fixture
-def package_simple_pyproject_script_with_flags(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> PackageInfo:
+def package_simple_pyproject_script_with_flags(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PackageInfo:
     package = PackageInfo(
         "simple_pyproject_script_with_flags",
     )
@@ -227,9 +211,7 @@ def package_simple_pyproject_script_with_flags(
 
 
 @pytest.fixture
-def package_simple_pyproject_source_dir(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> PackageInfo:
+def package_simple_pyproject_source_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PackageInfo:
     package = PackageInfo(
         "simple_pyproject_source_dir",
     )
@@ -238,45 +220,35 @@ def package_simple_pyproject_source_dir(
 
 
 @pytest.fixture
-def package_simple_setuptools_ext(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> PackageInfo:
+def package_simple_setuptools_ext(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PackageInfo:
     package = PackageInfo("simple_setuptools_ext")
     process_package(package, tmp_path, monkeypatch)
     return package
 
 
 @pytest.fixture
-def package_toml_setuptools_ext(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> PackageInfo:
+def package_toml_setuptools_ext(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PackageInfo:
     package = PackageInfo("toml_setuptools_ext")
     process_package(package, tmp_path, monkeypatch)
     return package
 
 
 @pytest.fixture
-def package_mixed_setuptools(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> PackageInfo:
+def package_mixed_setuptools(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PackageInfo:
     package = PackageInfo("mixed_setuptools")
     process_package(package, tmp_path, monkeypatch)
     return package
 
 
 @pytest.fixture
-def package_filepath_pure(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> PackageInfo:
+def package_filepath_pure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PackageInfo:
     package = PackageInfo("filepath_pure")
     process_package(package, tmp_path, monkeypatch)
     return package
 
 
 @pytest.fixture
-def package_dynamic_metadata(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> PackageInfo:
+def package_dynamic_metadata(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PackageInfo:
     package = PackageInfo("dynamic_metadata")
     process_package(package, tmp_path, monkeypatch)
     return package
@@ -317,9 +289,7 @@ def broken_fallback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PackageI
 
 
 @pytest.fixture
-def package_sdist_config(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> PackageInfo:
+def package_sdist_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PackageInfo:
     package = PackageInfo(
         "sdist_config",
     )
@@ -328,9 +298,7 @@ def package_sdist_config(
 
 
 @pytest.fixture
-def package_simple_purelib_package(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> PackageInfo:
+def package_simple_purelib_package(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PackageInfo:
     package = PackageInfo(
         "simple_purelib_package",
     )

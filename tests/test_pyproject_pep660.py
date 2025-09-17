@@ -75,9 +75,7 @@ def test_pep660_pip_isolated(isolated, isolate, editable_mode: str):
     value = isolated.execute("import simplest; print(simplest.square(2))")
     assert value == "4.0"
 
-    location_str = isolated.execute(
-        "import simplest; print(*simplest.__path__, sep=';')"
-    )
+    location_str = isolated.execute("import simplest; print(*simplest.__path__, sep=';')")
     locations = [Path(s).resolve() for s in location_str.split(";")]
 
     # First path is from the python source
@@ -93,9 +91,7 @@ def test_pep660_pip_isolated(isolated, isolate, editable_mode: str):
     # The package file is defined in the python source and __file__ must point to it
     assert Path("src/simplest/__init__.py").resolve().samefile(Path(location).resolve())
 
-    location = isolated.execute(
-        "import simplest._module; print(simplest._module.__file__)"
-    )
+    location = isolated.execute("import simplest._module; print(simplest._module.__file__)")
 
     if sys.version_info < (3, 8, 7):
         import distutils.sysconfig  # pylint: disable=deprecated-module
@@ -108,11 +104,7 @@ def test_pep660_pip_isolated(isolated, isolate, editable_mode: str):
     module_file = module_source / f"_module{ext_suffix}"
 
     # Windows FindPython may produce the wrong extension
-    if (
-            sys.version_info < (3, 8, 7)
-            and sys.platform.startswith("win")
-            and not module_file.is_file()
-    ):
+    if sys.version_info < (3, 8, 7) and sys.platform.startswith("win") and not module_file.is_file():
         module_file = module_source / "_module.pyd"
 
     assert module_file.samefile(Path(location).resolve())
