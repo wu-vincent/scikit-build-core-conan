@@ -14,7 +14,7 @@ class ConanSettings:
     path: str = "."
     # common install
     build: str = "missing"
-    remote: list[str] | None = None
+    remote: list[str] = field(default_factory=list)
     no_remote: bool = False
     # profile
     profile: str = ""

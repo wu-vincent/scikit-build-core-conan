@@ -32,25 +32,72 @@ version = "0.0.1"
 
 ## Configuration
 
-`scikit-build-core-conan` supports a broad range of configuration options. These options can be placed directly in
-the `pyproject.toml` file. They can also be passed via `-C/--config-setting` in build or `-C/--config-settings`
-in `pip`. Below are the supported configuration options:
+All configuration These options can be placed directly in the `pyproject.toml` file. They can also be passed via
+`-C/--config-setting` in build or `-C/--config-settings` in `pip`.
+
+A quick summary and some defaults are listed below:
 
 ```toml
 [tool.scikit-build-core-conan]
+# Path to a folder containing a recipe (conanfile.py or conanfile.txt)
 path = "."
+
+# Specify which packages to build from source
 build = "missing"
-profile = "default"
+
+# Look in the specified remote or remotes server. Leave it empty will use all remotes.
+remote = []
+
+# Do not use remote, resolve exclusively in the cache
+no-remote = false
+
+# Apply the specified profile to the host (default) context
+profile = ""
+
+# Apply the specified profile to the build context
+profile-build = ""
+
+# Apply the specified profile to both contexts
+profile-all = ""
+
+# Apply the specified options to the host (default) context
 options = []
+
+# Apply the specified options to the build context
+options-build = []
+
+# Apply the specified options to both contexts
+options-all = []
+
+# Apply the specified settings to the host (default) context
 settings = []
+
+# Apply the specified settings to the build context
+settings-build = []
+
+# Apply the specified settings to both contexts
+settings-all = []
+
+# Apply the specified config to the host (default) context
 config = []
-generator = "Ninja"
-output-folder = "build"
+
+# Apply the specified config to the build context
+config-build = []
+
+# Apply the specified config to both contexts
+config-all = []
+
+# Generators to use (e.g. Ninja)
+generator = ""
+
+# The root output folder for generated and build files
+output-folder = ""
 ```
 
 ### Local recipes
 
 Sometimes you may want to consume a local recipe rather than from the conan centre index. You can do this like this:
+
 ```toml
 [[tool.scikit-build-core-conan.local-recipes]]
 path = "path/to/recipe"
@@ -73,4 +120,5 @@ profile = "/path/to/profile"
 
 ## Projects using this build backend:
 
-- **[endstone](https://github.com/EndstoneMC/endstone)**: A high-level plugin api for Minecraft: Bedrock Edition Dedicated Servers.
+- **[endstone](https://github.com/EndstoneMC/endstone)**: A high-level plugin api for Minecraft: Bedrock Edition
+  Dedicated Servers.
