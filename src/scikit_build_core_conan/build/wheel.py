@@ -95,7 +95,7 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
         profile_build = conan_api.profiles.get_profile(
             profiles=build_profiles,
             settings=[f"build_type={build_type}", *build_settings],
-            options=[o for options in (settings.options_build, settings.settings_all) for o in options],
+            options=[o for options in (settings.options_build, settings.options_all) for o in options],
             conf=[c for conf in (settings.config_build, settings.config_all) for c in conf],
             cwd=cwd,
             context="build",
@@ -103,7 +103,7 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
         profile_host = conan_api.profiles.get_profile(
             profiles=host_profiles,
             settings=[f"build_type={build_type}", *host_settings],
-            options=[o for options in (settings.options, settings.settings_all) for o in options],
+            options=[o for options in (settings.options, settings.options_all) for o in options],
             conf=[c for conf in (settings.config, settings.config_all) for c in conf],
             cwd=cwd,
             context="host",
