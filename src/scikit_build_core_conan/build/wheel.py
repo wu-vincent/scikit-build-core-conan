@@ -70,16 +70,12 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
         conan_api = ConanAPI()
         conanfile_path = conan_api.local.get_conanfile_path(tmp, os.getcwd, py=None)
         output_folder = (
-            os.path.normpath(os.path.join(os.getcwd(), settings.output_folder))
-            if settings.output_folder
-            else None
+            os.path.normpath(os.path.join(os.getcwd(), settings.output_folder)) if settings.output_folder else None
         )
 
         remotes = conan_api.remotes.list()
         lockfile = conan_api.lockfile.get_lockfile(conanfile_path=tmp)
-        profiles = [
-            os.path.abspath(settings.profile) if settings.profile else "default"
-        ]
+        profiles = [os.path.abspath(settings.profile) if settings.profile else "default"]
 
         profile_host = conan_api.profiles.get_profile(
             profiles,
@@ -107,16 +103,10 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
             remotes=remotes,
             update=False,
         )
-        conan_api.graph.analyze_binaries(
-            deps_graph, [settings.build], remotes, lockfile=lockfile
-        )
+        conan_api.graph.analyze_binaries(deps_graph, [settings.build], remotes, lockfile=lockfile)
         conan_api.install.install_binaries(deps_graph, remotes)
-        conan_api.install.install_consumer(
-            deps_graph, settings.generator, tmp, output_folder
-        )
-        lockfile = conan_api.lockfile.update_lockfile(
-            lockfile, deps_graph, False, False
-        )
+        conan_api.install.install_consumer(deps_graph, settings.generator, tmp, output_folder)
+        lockfile = conan_api.lockfile.update_lockfile(lockfile, deps_graph, False, False)
         conan_api.lockfile.save_lockfile(lockfile, None)
 
         return deps_graph.root
@@ -126,9 +116,7 @@ def _conan_detect_profile():
     conan_api = ConanAPI()
     profiles = conan_api.profiles.list()
     if "default" not in profiles:
-        profile_pathname = conan_api.profiles.get_path(
-            "default", os.getcwd(), exists=False
-        )
+        profile_pathname = conan_api.profiles.get_path("default", os.getcwd(), exists=False)
         detected_profile = conan_api.profiles.detect()
         dir_path = os.path.dirname(profile_pathname)
         if dir_path:
@@ -236,10 +224,6 @@ def _build_wheel_impl(
 
         # Profit
         if not editable:
-            return scikit_build_core.build.build_wheel(
-                wheel_directory, config_settings, metadata_directory
-            )
+            return scikit_build_core.build.build_wheel(wheel_directory, config_settings, metadata_directory)
         else:
-            return scikit_build_core.build.build_editable(
-                wheel_directory, config_settings, metadata_directory
-            )
+            return scikit_build_core.build.build_editable(wheel_directory, config_settings, metadata_directory)
