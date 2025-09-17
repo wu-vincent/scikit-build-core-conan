@@ -108,14 +108,14 @@ version = "0.0.1" # optional: package version if not specified in conanfile
 ### Overrides
 
 `scikit-build-core-conan` uses the same override system as `scikit-build-core`. For more details, check out the
-[documentation](https://scikit-build-core.readthedocs.io/en/latest/configuration.html#overrides) of `scikit-build-core`.
+[documentation](https://scikit-build-core.readthedocs.io/en/latest/configuration/overrides.html) of `scikit-build-core`.
 
 For example:
 
 ```toml
 [[tool.scikit-build-core-conan.overrides]]
 if.platform-system = "linux"
-profile = "/path/to/profile"
+profile = "path/to/profile"
 ```
 
 ## Projects using this build backend:
