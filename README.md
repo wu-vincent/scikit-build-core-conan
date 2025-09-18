@@ -5,17 +5,11 @@ A conan plugin for scikit-build-core
 > [!NOTE]
 > This project is under early development. Should you encounter any problems, please feel free to open an issue.
 
-## Installation
-
-```shell
-pip install scikit-build-core-conan
-```
+## Example
 
 To use `scikit-build-core-conan`, add it to your `build-system.requires`, and specify
 the `scikit_build_core_conan.build` builder as your `build-system.build-backend`. You do not need to
 specify `scikit_build_core` as it will be required automatically.
-
-## Project Example
 
 Here's a simple example on how you can use `scikit-build-core-conan` in your `pyproject.toml`.
 
