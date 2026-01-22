@@ -1,18 +1,27 @@
 # scikit-build-core-conan
 
-A conan plugin for scikit-build-core
+[![CI](https://github.com/wu-vincent/scikit-build-core-conan/actions/workflows/ci.yml/badge.svg)](https://github.com/wu-vincent/scikit-build-core-conan/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/scikit-build-core-conan)](https://pypi.org/project/scikit-build-core-conan/)
+[![Python versions](https://img.shields.io/pypi/pyversions/scikit-build-core-conan)](https://pypi.org/project/scikit-build-core-conan/)
+[![License](https://img.shields.io/pypi/l/scikit-build-core-conan)](https://github.com/wu-vincent/scikit-build-core-conan/blob/main/LICENSE)
 
-## Roadmap
+A [Conan](https://conan.io/) plugin for [scikit-build-core](https://github.com/scikit-build/scikit-build-core) that
+simplifies building Python extensions with C/C++ dependencies managed by Conan.
 
-This project will be renamed to `scikit-build-conan` upon the 1.0 stable release.
+**Why use this?** Instead of manually configuring Conan and CMake toolchains, this plugin handles dependency resolution,
+build configuration, and CMake integration automatically - all configured through your `pyproject.toml`.
 
-## Example
+## Features
 
-To use `scikit-build-core-conan`, add it to your `build-system.requires`, and specify
-the `scikit_build_core_conan.build` builder as your `build-system.build-backend`. You do not need to
-specify `scikit_build_core` as it will be required automatically.
+- **Seamless Conan 2.x integration** with scikit-build-core's modern Python build system
+- **Local recipe support** for consuming in-development Conan packages
+- **Lockfile support** for reproducible builds across environments
+- **Full configuration via `pyproject.toml`** - no separate Conan commands needed
 
-Here's a simple example on how you can use `scikit-build-core-conan` in your `pyproject.toml`.
+## Quick Start
+
+Add `scikit-build-core-conan` to your `build-system.requires` and specify `scikit_build_core_conan.build` as your build
+backend. You do not need to include `scikit-build-core` separately - it is required automatically.
 
 ```toml
 [build-system]
@@ -20,14 +29,21 @@ requires = ["scikit-build-core-conan"]
 build-backend = "scikit_build_core_conan.build"
 
 [project]
-name = "scikit_build_conan_simplest"
+name = "my_project"
 version = "0.0.1"
 ```
 
+With this configuration, the plugin will:
+
+1. Look for a `conanfile.py` or `conanfile.txt` in your project root
+2. Install dependencies using Conan (building from source if needed)
+3. Configure CMake with the appropriate toolchain
+4. Build your Python extension
+
 ## Configuration
 
-All options can be placed directly in `pyproject.toml` under `[tool.scikit-build-core-conan]`. They can also be passed
-via `-C/--config-setting` in build or `-C/--config-settings` in pip.
+All options can be placed in `pyproject.toml` under `[tool.scikit-build-core-conan]`, or passed via
+`-C/--config-setting` in build or `-C/--config-settings` in pip.
 
 ```toml
 [tool.scikit-build-core-conan]
@@ -98,9 +114,9 @@ lockfile-out = ""
 lockfile-clean = false
 ```
 
-### Local recipes
+### Local Recipes
 
-Sometimes you may want to consume a local recipe rather than from the conan centre index. You can do this like this:
+Sometimes you may want to consume a local recipe rather than from the Conan Center Index. You can do this like this:
 
 ```toml
 [[tool.scikit-build-core-conan.local-recipes]]
@@ -111,8 +127,9 @@ version = "0.0.1" # optional: package version if not specified in conanfile
 
 ### Overrides
 
-`scikit-build-core-conan` uses the same override system as `scikit-build-core`. For more details, check out the
-[documentation](https://scikit-build-core.readthedocs.io/en/latest/configuration/overrides.html) of `scikit-build-core`.
+`scikit-build-core-conan` uses the same override system as `scikit-build-core`. For more details, check out
+the [documentation](https://scikit-build-core.readthedocs.io/en/latest/configuration/overrides.html) of
+`scikit-build-core`.
 
 For example:
 
@@ -122,7 +139,20 @@ if.platform-system = "linux"
 profile = "path/to/profile"
 ```
 
-## Projects using this build backend:
+## Projects Using This Build Backend
 
-- **[endstone](https://github.com/EndstoneMC/endstone)**: A high-level plugin api for Minecraft: Bedrock Edition
+- **[endstone](https://github.com/EndstoneMC/endstone)**: A high-level plugin API for Minecraft: Bedrock Edition
   Dedicated Servers.
+
+*Using scikit-build-core-conan in your project? Feel free to open a PR to add it here!*
+
+## Roadmap
+
+This project will be renamed to `scikit-build-conan` upon the 1.0 stable release.
+
+## Links
+
+- [Changelog](CHANGELOG.md)
+- [scikit-build-core documentation](https://scikit-build-core.readthedocs.io/)
+- [Conan documentation](https://docs.conan.io/)
+- [Report issues](https://github.com/wu-vincent/scikit-build-core-conan/issues)
