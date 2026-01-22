@@ -4,9 +4,9 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scikit-build-core-conan"
-version = "0.8.0"
+version = "0.9.0"
 authors = [
-    { name = "Zhengyu Wu", email = "zhengyu.wu21@imperial.ac.uk" },
+    { name = "Vincent", email = "magicdroidx@gmail.com" },
 ]
 description = "A conan plugin for scikit-build-core"
 readme = "README.md"
@@ -17,12 +17,10 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
-    "License :: OSI Approved :: Apache Software License",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
