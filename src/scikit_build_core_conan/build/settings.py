@@ -10,13 +10,19 @@ class ConanLocalRecipesSettings:
 
 @dataclass
 class ConanSettings:
-    # common
     path: str = "."
-    # common install
-    build: str = "missing"
+    # options
+    build: list[str] | str = "missing"
+    generator: str = ""
+    output_folder: str = ""
+    deployer: list[str] = field(default_factory=list)
+    deployer_folder: str = ""
+    deployer_package: list[str] = field(default_factory=list)
+    # remote arguments
     remote: list[str] = field(default_factory=list)
     no_remote: bool = False
-    # profile
+    update: bool = False
+    # profile arguments
     profile: str = ""
     profile_build: str = ""
     profile_all: str = ""
@@ -29,8 +35,15 @@ class ConanSettings:
     config: list[str] = field(default_factory=list)
     config_build: list[str] = field(default_factory=list)
     config_all: list[str] = field(default_factory=list)
-    # install
-    generator: str = ""
-    output_folder: str = ""
-    # extra
+    # reference arguments
+    name: str = ""
+    version: str = ""
+    user: str = ""
+    channel: str = ""
+    # lockfile arguments
+    lockfile: str = ""
+    lockfile_partial: bool = False
+    lockfile_out: str = ""
+    lockfile_clean: bool = False
+    # custom extensions
     local_recipes: list[ConanLocalRecipesSettings] = field(default_factory=list)
