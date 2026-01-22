@@ -69,6 +69,13 @@ def _make_abs_path(path, cwd=None):
     return abs_path
 
 
+def _normalize_build_policy(build: list[str] | str) -> list[str]:
+    """Normalize build policy to a list of strings."""
+    if isinstance(build, str):
+        return [build] if build else ["missing"]
+    return build if build else ["missing"]
+
+
 def _conan_install(settings: ConanSettings, build_type: str) -> dict:
     # mostly reimplement conan.cli.commands.install
     conan_api = ConanAPI()
@@ -87,7 +94,15 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
 
         # Basic collaborators: remotes, lockfile, profiles
         remotes = conan_api.remotes.list(settings.remote) if not settings.no_remote else []
-        lockfile = conan_api.lockfile.get_lockfile(lockfile=None, conanfile_path=path)
+
+        # Lockfile handling
+        lockfile_path = _make_abs_path(settings.lockfile, cwd) if settings.lockfile else None
+        lockfile = conan_api.lockfile.get_lockfile(
+            lockfile=lockfile_path,
+            conanfile_path=path,
+            partial=settings.lockfile_partial,
+        )
+
         build_profiles = [settings.profile_all or settings.profile_build or conan_api.profiles.get_default_build()]
         host_profiles = [settings.profile_all or settings.profile or conan_api.profiles.get_default_host()]
         build_settings = [s for settings in (settings.settings_build, settings.settings_all) for s in settings]
@@ -114,28 +129,43 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
         gapi = conan_api.graph
         deps_graph = gapi.load_graph_consumer(
             path,
-            name="",
-            version="",
-            user="",
-            channel="",
+            name=settings.name,
+            version=settings.version,
+            user=settings.user,
+            channel=settings.channel,
             profile_host=profile_host,
             profile_build=profile_build,
             lockfile=lockfile,
             remotes=remotes,
-            update=False,
+            update=settings.update,
         )
         deps_graph.report_graph_error()
-        gapi.analyze_binaries(deps_graph, [settings.build], remotes, lockfile=lockfile)
+
+        # Normalize build policy (support both string and list)
+        build_policy = _normalize_build_policy(settings.build)
+        gapi.analyze_binaries(deps_graph, build_policy, remotes, update=settings.update, lockfile=lockfile)
 
         # Installation of binaries and consumer generators
         conan_api.install.install_binaries(deps_graph, remotes)
         ConanOutput().title("Finalizing install (deploy, generators)")
-        conan_api.install.install_consumer(deps_graph, settings.generator, source_folder, output_folder)
+        deployer_folder = _make_abs_path(settings.deployer_folder, cwd) if settings.deployer_folder else output_folder
+        conan_api.install.install_consumer(
+            deps_graph, settings.generator, source_folder, output_folder,
+            deploy=settings.deployer,
+            deploy_package=settings.deployer_package,
+            deploy_folder=deployer_folder,
+        )
+
         ConanOutput().success("Install finished successfully")
 
         # Update lockfile if necessary
-        lockfile = conan_api.lockfile.update_lockfile(lockfile, deps_graph, False, False)
-        conan_api.lockfile.save_lockfile(lockfile, None)
+        lockfile = conan_api.lockfile.update_lockfile(
+            lockfile,
+            deps_graph,
+            lock_packages=False,
+            clean=settings.lockfile_clean,
+        )
+        conan_api.lockfile.save_lockfile(lockfile, settings.lockfile_out, cwd)
 
         return deps_graph.root
 
