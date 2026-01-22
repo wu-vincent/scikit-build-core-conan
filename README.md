@@ -14,7 +14,6 @@ specify `scikit_build_core` as it will be required automatically.
 Here's a simple example on how you can use `scikit-build-core-conan` in your `pyproject.toml`.
 
 ```toml
-
 [build-system]
 requires = ["scikit-build-core-conan"]
 build-backend = "scikit_build_core_conan.build"
@@ -26,66 +25,76 @@ version = "0.0.1"
 
 ## Configuration
 
-All configuration These options can be placed directly in the `pyproject.toml` file. They can also be passed via
-`-C/--config-setting` in build or `-C/--config-settings` in `pip`.
-
-A quick summary and some defaults are listed below:
+All options can be placed directly in `pyproject.toml` under `[tool.scikit-build-core-conan]`. They can also be passed
+via `-C/--config-setting` in build or `-C/--config-settings` in pip.
 
 ```toml
 [tool.scikit-build-core-conan]
 # Path to a folder containing a recipe (conanfile.py or conanfile.txt)
 path = "."
 
-# Specify which packages to build from source
+# Specify which packages to build from source. Possible values: "never", "missing", "cascade", ["pattern", ...]
 build = "missing"
-
-# Look in the specified remote or remotes server. Leave it empty will use all remotes.
-remote = []
-
-# Do not use remote, resolve exclusively in the cache
-no-remote = false
-
-# Apply the specified profile to the host (default) context
-profile = ""
-
-# Apply the specified profile to the build context
-profile-build = ""
-
-# Apply the specified profile to both contexts
-profile-all = ""
-
-# Apply the specified options to the host (default) context
-options = []
-
-# Apply the specified options to the build context
-options-build = []
-
-# Apply the specified options to both contexts
-options-all = []
-
-# Apply the specified settings to the host (default) context
-settings = []
-
-# Apply the specified settings to the build context
-settings-build = []
-
-# Apply the specified settings to both contexts
-settings-all = []
-
-# Apply the specified config to the host (default) context
-config = []
-
-# Apply the specified config to the build context
-config-build = []
-
-# Apply the specified config to both contexts
-config-all = []
-
-# Generators to use (e.g. Ninja)
+# Generators to use
 generator = ""
-
 # The root output folder for generated and build files
 output-folder = ""
+# Deploy using the provided deployer to the output folder. Built-in deployers: full_deploy, direct_deploy, runtime_deploy
+deployer = []
+# Deployer output folder, base build folder by default if not set
+deployer-folder = ""
+# Execute the deploy() method of the packages matching the provided patterns
+deployer-package = []
+
+# Look in the specified remote or remotes server
+remote = []
+# Do not use remote, resolve exclusively in the cache
+no-remote = false
+# Will install newer versions and/or revisions in the local cache
+update = false
+
+# Apply the specified profile to the host context
+profile = ""
+# Apply the specified profile to the build context
+profile-build = ""
+# Apply the specified profile to both contexts at once
+profile-all = ""
+# Apply the specified options to the host context. Example: ["pkg/*:with_qt=True"]
+options = []
+# Apply the specified options to the build context
+options-build = []
+# Apply the specified options to both contexts at once
+options-all = []
+# Apply the specified settings to the host context. Example: ["compiler=gcc"]
+settings = []
+# Apply the specified settings to the build context
+settings-build = []
+# Apply the specified settings to both contexts at once
+settings-all = []
+# Apply the specified conf to the host context. Example: ["tools.cmake.cmaketoolchain:generator=Xcode"]
+config = []
+# Apply the specified conf to the build context
+config-build = []
+# Apply the specified conf to both contexts at once
+config-all = []
+
+# Provide a package name if not specified in conanfile
+name = ""
+# Provide a package version if not specified in conanfile
+version = ""
+# Provide a user if not specified in conanfile
+user = ""
+# Provide a channel if not specified in conanfile
+channel = ""
+
+# Path to a lockfile. Use "" to avoid automatic use of existing conan.lock file
+lockfile = ""
+# Do not raise an error if some dependency is not found in lockfile
+lockfile-partial = false
+# Filename of the updated lockfile
+lockfile-out = ""
+# Remove unused entries from the lockfile
+lockfile-clean = false
 ```
 
 ### Local recipes
