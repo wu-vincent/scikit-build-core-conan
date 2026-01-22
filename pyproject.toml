@@ -39,8 +39,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-pyproject = [
-]
 test = [
     "build >=0.8",
     "cattrs >=22.2.0",

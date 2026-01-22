@@ -168,8 +168,7 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
             lock_packages=False,
             clean=settings.lockfile_clean,
         )
-        conan_api.lockfile.save_lockfile(lockfile, settings.lockfile_out, cwd)
-
+        conan_api.lockfile.save_lockfile(lockfile, settings.lockfile_out, None)
         return deps_graph.root
 
 
