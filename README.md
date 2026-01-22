@@ -2,6 +2,10 @@
 
 A conan plugin for scikit-build-core
 
+## Roadmap
+
+This project will be renamed to `scikit-build-conan` upon the 1.0 stable release.
+
 ## Example
 
 To use `scikit-build-core-conan`, add it to your `build-system.requires`, and specify
