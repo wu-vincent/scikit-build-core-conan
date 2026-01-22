@@ -150,7 +150,10 @@ def _conan_install(settings: ConanSettings, build_type: str) -> dict:
         ConanOutput().title("Finalizing install (deploy, generators)")
         deployer_folder = _make_abs_path(settings.deployer_folder, cwd) if settings.deployer_folder else output_folder
         conan_api.install.install_consumer(
-            deps_graph, settings.generator, source_folder, output_folder,
+            deps_graph,
+            settings.generator,
+            source_folder,
+            output_folder,
             deploy=settings.deployer,
             deploy_package=settings.deployer_package,
             deploy_folder=deployer_folder,
