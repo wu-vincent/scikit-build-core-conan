@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2025-01-30
+
+### Changed
+
+- Minimum Python version raised to 3.10
+
+### Fixed
+
+- Fixed `TypeError: Can't convert target list[str]` when using scikit-build-core's SourceChain by removing `from __future__ import annotations` which caused type annotations to be stored as strings at runtime
+
 ## [0.9.0] - 2025-01-22
 
 > **Note:** This package will be renamed to `scikit-build-conan` at version 1.0.
