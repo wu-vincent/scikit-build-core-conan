@@ -17,6 +17,9 @@ build configuration, and CMake integration automatically - all configured throug
 - **Local recipe support** for consuming in-development Conan packages
 - **Lockfile support** for reproducible builds across environments
 - **Full configuration via `pyproject.toml`** - no separate Conan commands needed
+- **Full scikit-build-core compatibility** - any `[tool.scikit-build]` configuration works as-is
+
+This plugin simply runs Conan to install dependencies and set up the toolchain before invoking scikit-build-core.
 
 ## Quick Start
 
