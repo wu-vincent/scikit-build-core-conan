@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2025-02-04
+
+### Fixed
+
+- Fixed compatibility with older versions of scikit-build-core by using `Union[List[str], str]` instead of `list[str] | str` syntax ([#11](https://github.com/wu-vincent/scikit-build-core-conan/issues/11))
+
 ## [0.9.1] - 2025-01-30
 
 ### Changed

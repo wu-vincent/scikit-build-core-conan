@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import List, Union
 
 
 @dataclass
@@ -12,7 +13,10 @@ class ConanLocalRecipesSettings:
 class ConanSettings:
     path: str = "."
     # options
-    build: list[str] | str = "missing"
+    # NOTE: Using Union instead of `list[str] | str` because older versions of
+    # scikit-build-core don't support the `A | B` syntax.
+    # See: https://github.com/scikit-build/scikit-build-core/issues/1213
+    build: Union[List[str], str] = "missing"
     generator: str = ""
     output_folder: str = ""
     deployer: list[str] = field(default_factory=list)
